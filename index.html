@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layanan Pengajuan VervalPD - Kab. Kebumen</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        @keyframes pulse-subtle {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.85; transform: scale(1.05); }
+        }
+        .animate-pulse-subtle {
+            animation: pulse-subtle 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- HEADER NAVBAR -->
+    <header class="bg-gradient-to-r from-emerald-800 via-emerald-700 to-teal-800 text-white shadow-lg sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo & Brand -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('input')">
+                    <div class="bg-white/10 p-2.5 rounded-xl backdrop-blur-md border border-white/20 shadow-inner">
+                        <i class="fa-solid fa-school-flag text-emerald-300 text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-base sm:text-lg font-bold leading-tight tracking-wide">LAYANAN VERVALPD</h1>
+                        <p class="text-[11px] text-emerald-200">Portal Request Belum Masuk VervalPD</p>
+                    </div>
+                </div>
+
+                <!-- Desktop Navigation Nav Links -->
+                <nav class="hidden md:flex items-center space-x-2">
+                    <button onclick="switchTab('input')" id="nav-btn-input" class="nav-tab px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center space-x-2 bg-white/20 text-white shadow-inner">
+                        <i class="fa-solid fa-file-pen"></i>
+                        <span>Input Request</span>
+                    </button>
+                    <button onclick="checkAdminAuthAndNavigate()" id="nav-btn-history" class="nav-tab px-4 py-2 rounded-xl text-xs font-semibold text-emerald-100 hover:bg-white/10 hover:text-white transition-all duration-200 flex items-center space-x-2">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                        <span>Riwayat Ajuan</span>
+                        <span id="admin-lock-icon" class="text-[10px] bg-emerald-950/80 px-1.5 py-0.5 rounded text-amber-300 ml-1 border border-amber-400/30">
+                            <i class="fa-solid fa-lock text-[9px]"></i> Admin
+                        </span>
+                        <span id="history-badge" class="bg-amber-500 text-slate-900 text-[10px] font-bold px-2 py-0.5 rounded-full hidden">0</span>
+                    </button>
+                </nav>
+
+                <!-- Action Items (Notifications & Admin Info) -->
+                <div class="flex items-center space-x-3">
+                    <!-- Notification Bell Dropdown (Only Visible to Logged In Admin) -->
+                    <div id="notif-wrapper" class="relative hidden">
+                        <button id="notif-btn" onclick="toggleNotifDropdown()" class="relative p-2 text-emerald-100 hover:text-white hover:bg-white/10 rounded-full transition focus:outline-none">
+                            <i class="fa-solid fa-bell text-xl"></i>
+                            <span id="notif-count" class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold leading-none text-white transform translate-x-1/3 -translate-y-1/3 bg-red-500 rounded-full animate-pulse-subtle border-2 border-emerald-800">0</span>
+                        </button>
+
+                        <!-- Notification Dropdown Panel -->
+                        <div id="notif-dropdown" class="hidden absolute right-0 mt-3 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 text-slate-800 overflow-hidden transform transition-all">
+                            <div class="p-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fa-solid fa-triangle-exclamation text-amber-400"></i>
+                                    <h3 class="font-semibold text-xs uppercase tracking-wider">Permohonan Belum Ditindaklanjuti</h3>
+                                </div>
+                                <span id="notif-panel-badge" class="bg-amber-500/20 text-amber-300 text-[10px] px-2 py-0.5 rounded-full font-bold border border-amber-500/30">0 Permohonan</span>
+                            </div>
+                            <div id="notif-list" class="max-h-80 overflow-y-auto custom-scrollbar divide-y divide-slate-100">
+                                <!-- Notif items inserted dynamically -->
+                            </div>
+                            <div class="p-3 bg-slate-50 text-center border-t border-slate-100">
+                                <button onclick="checkAdminAuthAndNavigate(); toggleNotifDropdown()" class="text-xs font-semibold text-emerald-700 hover:text-emerald-800 hover:underline">
+                                    Lihat Semua Riwayat Ajuan &rarr;
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- User / Login Badge Button -->
+                    <div id="user-badge-container" class="flex items-center space-x-2 border-l border-emerald-600/50 pl-3">
+                        <!-- Populated dynamically via JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Bottom Navigation Bar -->
+        <div class="md:hidden flex border-t border-emerald-600/50 bg-emerald-900/60 px-2 py-1.5 justify-around">
+            <button onclick="switchTab('input')" id="mobile-nav-input" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-white/20 flex items-center space-x-1.5">
+                <i class="fa-solid fa-file-pen"></i>
+                <span>Input Request</span>
+            </button>
+            <button onclick="checkAdminAuthAndNavigate()" id="mobile-nav-history" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-200 flex items-center space-x-1.5">
+                <i class="fa-solid fa-lock text-[10px] text-amber-300"></i>
+                <span>Riwayat Admin</span>
+                <span id="mobile-history-badge" class="bg-amber-500 text-slate-900 text-[10px] px-1.5 py-0.2 font-bold rounded-full hidden">0</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+
+        <!-- Toast Notification Alert Box -->
+        <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+        <!-- TAB 1: FORM INPUT (Publik) -->
+        <section id="tab-input" class="tab-content transition-all duration-300">
+            <div class="max-w-3xl mx-auto">
+                
+                <!-- Title Card -->
+                <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 mb-6">
+                    <div class="flex items-center space-x-3 mb-2">
+                        <span class="px-3 py-1 bg-emerald-100 text-emerald-800 font-bold text-xs rounded-full uppercase tracking-wider">Formulir Resmi</span>
+                        <span class="text-xs text-slate-400">• VervalPD EMIS</span>
+                    </div>
+                    <h2 class="text-xl sm:text-2xl font-extrabold text-slate-800">REQUEST BELUM MASUK DI VERVALPD</h2>
+                    <p class="text-xs sm:text-sm text-slate-500 mt-1 leading-relaxed">
+                        Silakan lengkapi data siswa di bawah ini yang sudah aktif di EMIS tetapi belum terdaftar di aplikasi VervalPD untuk ditindaklanjuti oleh Admin Kabupaten.
+                    </p>
+                </div>
+
+                <!-- Input Form -->
+                <form id="verval-form" onsubmit="handleFormSubmit(event)" class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
+                    
+                    <!-- Section 1: Data Madrasah -->
+                    <div>
+                        <h3 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-4 flex items-center space-x-2 border-b border-emerald-100 pb-2">
+                            <i class="fa-solid fa-school text-emerald-600"></i>
+                            <span>1. Data Satuan Pendidikan / Madrasah</span>
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="sm:col-span-2">
+                                <label for="namaMadrasah" class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Nama Madrasah <span class="text-red-500">*</span></label>
+                                <input type="text" id="namaMadrasah" required placeholder="Contoh: MIS Nurul Huda Kebumen"
+                                    class="w-full px-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition">
+                            </div>
+                            <div>
+                                <label for="noWhatsapp" class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Nomor WhatsApp Pengaju <span class="text-red-500">*</span></label>
+                                <input type="tel" id="noWhatsapp" required placeholder="Contoh: 081234567890"
+                                    class="w-full px-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition font-mono">
+                            </div>
+                            <div>
+                                <label for="nsm" class="block text-xs font-bold text-slate-700 uppercase mb-1.5">NSM (12 Digit) <span class="text-red-500">*</span></label>
+                                <input type="text" id="nsm" required maxlength="12" placeholder="12123305XXXX"
+                                    class="w-full px-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition font-mono">
+                            </div>
+                            <div>
+                                <label for="npsn" class="block text-xs font-bold text-slate-700 uppercase mb-1.5">NPSN (8 Digit) <span class="text-red-500">*</span></label>
+                                <input type="text" id="npsn" required maxlength="8" placeholder="2036XXXX"
+                                    class="w-full px-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition font-mono">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Data Identitas Siswa -->
+                    <div>
+                        <h3 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-4 flex items-center space-x-2 border-b border-emerald-100 pb-2">
+                            <i class="fa-solid fa-id-card text-emerald-600"></i>
+                            <span>2. Data Identitas Peserta Didik</span>
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="sm:col-span-2">
+                                <label for="namaSiswa" class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Nama Lengkap Siswa <span class="text-red-500">*</span></label>
+                                <input type="text" id="namaSiswa" required placeholder="Masukkan nama lengkap siswa sesuai KK"
+                                    class="w-full px-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition">
+                            </div>
+                            <div>
+                                <label for="nisn" class="block text-xs font-bold text-slate-700 uppercase mb-1.5">NISN (10 Digit) <span class="text-red-500">*</span></label>
+                                <input type="text" id="nisn" required maxlength="10" placeholder="0123456789"
+                                    class="w-full px-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition font-mono">
+                            </div>
+                            <div>
+                                <label for="nik" class="block text-xs font-bold text-slate-700 uppercase mb-1.5">NIK (16 Digit) <span class="text-red-500">*</span></label>
+                                <input type="text" id="nik" required maxlength="16" placeholder="3305123456780001"
+                                    class="w-full px-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition font-mono">
+                            </div>
+                            <div>
+                                <label for="tempatLahir" class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Tempat Lahir <span class="text-red-500">*</span></label>
+                                <input type="text" id="tempatLahir" required placeholder="Kebumen"
+                                    class="w-full px-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition">
+                            </div>
+                            <div>
+                                <label for="tanggalLahir" class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Tanggal Lahir <span class="text-red-500">*</span></label>
+                                <input type="date" id="tanggalLahir" required
+                                    class="w-full px-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition">
+                            </div>
+                            <div>
+                                <label for="jenisKelamin" class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Jenis Kelamin <span class="text-red-500">*</span></label>
+                                <select id="jenisKelamin" required class="w-full px-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition font-medium">
+                                    <option value="Laki-laki">Laki-laki</option>
+                                    <option value="Perempuan">Perempuan</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="namaIbuKandung" class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Nama Ibu Kandung <span class="text-red-500">*</span></label>
+                                <input type="text" id="namaIbuKandung" required placeholder="Masukkan nama ibu kandung sesuai KK"
+                                    class="w-full px-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Tingkat Pendidikan & Status Kendala -->
+                    <div>
+                        <h3 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-4 flex items-center space-x-2 border-b border-emerald-100 pb-2">
+                            <i class="fa-solid fa-graduation-cap text-emerald-600"></i>
+                            <span>3. Tingkat Pendidikan & Status Record</span>
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="tingkatPendidikan" class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Tingkat Pendidikan <span class="text-red-500">*</span></label>
+                                <select id="tingkatPendidikan" required class="w-full px-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition font-medium">
+                                    <option value="RA / BA / TA">RA / BA / TA</option>
+                                    <option value="MI - Kelas 1">MI - Kelas 1</option>
+                                    <option value="MI - Kelas 2">MI - Kelas 2</option>
+                                    <option value="MI - Kelas 3">MI - Kelas 3</option>
+                                    <option value="MI - Kelas 4">MI - Kelas 4</option>
+                                    <option value="MI - Kelas 5">MI - Kelas 5</option>
+                                    <option value="MI - Kelas 6">MI - Kelas 6</option>
+                                    <option value="MTs - Kelas 7">MTs - Kelas 7</option>
+                                    <option value="MTs - Kelas 8">MTs - Kelas 8</option>
+                                    <option value="MTs - Kelas 9">MTs - Kelas 9</option>
+                                    <option value="MA - Kelas 10">MA - Kelas 10</option>
+                                    <option value="MA - Kelas 11">MA - Kelas 11</option>
+                                    <option value="MA - Kelas 12">MA - Kelas 12</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="recordAktif" class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Record Aktif</label>
+                                <input type="text" id="recordAktif" readonly value="AKTIF DI EMIS"
+                                    class="w-full px-4 py-2.5 text-xs bg-slate-100 border border-slate-200 rounded-xl text-emerald-800 font-bold cursor-not-allowed">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label for="kendala" class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Kendala Permohonan</label>
+                                <input type="text" id="kendala" value="Belum masuk vervalPD, aktif di EMIS"
+                                    class="w-full px-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="pt-4">
+                        <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800 text-white font-bold text-sm rounded-xl shadow-lg transition duration-200 flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>KIRIM REQUEST PERMOHONAN</span>
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+        </section>
+
+        <!-- TAB 2: RIWAYAT AJUAN (Khusus Admin Kabupaten) -->
+        <section id="tab-history" class="tab-content hidden transition-all duration-300">
+            <div class="space-y-6">
+
+                <!-- Header Banner Info Admin -->
+                <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 text-white rounded-2xl p-5 shadow-md border border-slate-800 flex items-center justify-between flex-wrap gap-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center font-bold">
+                            <i class="fa-solid fa-user-shield text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-base">Halaman Administrator Kabupaten</h3>
+                            <p class="text-xs text-slate-300">Anda login sebagai: <span class="font-semibold text-emerald-400">ferichamanies</span> (Admin Kab. Kebumen)</p>
+                        </div>
+                    </div>
+                    <button onclick="handleAdminLogout()" class="px-3.5 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span>Keluar Modul Admin</span>
+                    </button>
+                </div>
+
+                <!-- Header Stats Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex items-center space-x-4">
+                        <div class="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-folder-open"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase">Total Pengajuan</p>
+                            <h4 id="stat-total" class="text-2xl font-black text-slate-800">0</h4>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex items-center space-x-4">
+                        <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-hourglass-half"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase">Belum Ditindaklanjuti</p>
+                            <h4 id="stat-pending" class="text-2xl font-black text-amber-600">0</h4>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex items-center space-x-4">
+                        <div class="w-12 h-12 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-spinner"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase">Sedang Diproses</p>
+                            <h4 id="stat-processing" class="text-2xl font-black text-sky-600">0</h4>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex items-center space-x-4">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase">Selesai Sinkron</p>
+                            <h4 id="stat-completed" class="text-2xl font-black text-emerald-600">0</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Card Container -->
+                <div class="bg-white rounded-2xl shadow-md border border-slate-200/80 overflow-hidden">
+                    
+                    <!-- Search and Action Controls Header -->
+                    <div class="p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-base">Daftar Riwayat Pengajuan Request</h3>
+                            <p class="text-xs text-slate-500">Gunakan opsi tindak lanjut pada tiap baris untuk mengubah status pengajuan madrasah.</p>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-2">
+                            <!-- Search Input -->
+                            <div class="relative min-w-[200px]">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                <input type="text" id="search-input" onkeyup="filterHistoryTable()" placeholder="Cari Siswa / NSM / NIK..."
+                                    class="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            </div>
+
+                            <!-- Filter Select -->
+                            <select id="filter-status" onchange="filterHistoryTable()" class="py-2 px-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium">
+                                <option value="ALL">Semua Status</option>
+                                <option value="Belum Ditindaklanjuti">Belum Ditindaklanjuti</option>
+                                <option value="Sedang Diproses">Sedang Diproses</option>
+                                <option value="Selesai">Selesai / Sudah Sinkron</option>
+                                <option value="Ditolak">Ditolak / Data Tidak Sesuai</option>
+                            </select>
+
+                            <!-- Export CSV Button -->
+                            <button onclick="exportToCSV()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition flex items-center space-x-1.5">
+                                <i class="fa-solid fa-file-excel text-emerald-600"></i>
+                                <span>Ekspor Data</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Main Data Table -->
+                    <div class="overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-500 border-b border-slate-200 uppercase font-bold tracking-wider">
+                                    <th class="p-3.5 text-center">#</th>
+                                    <th class="p-3.5">Tanggal Ajuan</th>
+                                    <th class="p-3.5">Satuan Pendidikan & WA</th>
+                                    <th class="p-3.5">Data Siswa</th>
+                                    <th class="p-3.5">NIK & NISN</th>
+                                    <th class="p-3.5">Tingkat</th>
+                                    <th class="p-3.5 text-center">Status / Tindak Lanjut</th>
+                                    <th class="p-3.5 text-center">Aksi & Kirim WA</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-table-body" class="divide-y divide-slate-100 text-slate-700">
+                                <!-- Dynamic rows inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Empty State Placeholder -->
+                    <div id="empty-state" class="py-12 text-center text-slate-400 hidden">
+                        <i class="fa-regular fa-folder-open text-4xl mb-3 text-slate-300"></i>
+                        <p class="text-sm font-medium">Belum ada ajuan data request</p>
+                        <p class="text-xs text-slate-400 mt-1">Silakan tambahkan data melalui menu Input Request.</p>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL LOGIN ADMIN KABUPATEN -->
+    <div id="login-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden transform transition-all border border-slate-100">
+            <!-- Modal Header Banner -->
+            <div class="bg-gradient-to-br from-emerald-800 to-teal-900 text-white p-6 text-center relative">
+                <button onclick="closeLoginModal()" class="absolute top-4 right-4 text-emerald-200 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+                <div class="w-16 h-16 rounded-2xl bg-white/10 border border-white/20 mx-auto flex items-center justify-center mb-3 text-emerald-300 text-2xl shadow-inner">
+                    <i class="fa-solid fa-user-lock"></i>
+                </div>
+                <h3 class="font-bold text-lg">Login Admin Kabupaten</h3>
+                <p class="text-xs text-emerald-200 mt-1">Akses khusus pengelola VervalPD Kabupaten Kebumen</p>
+            </div>
+
+            <!-- Login Form -->
+            <form id="admin-login-form" onsubmit="handleAdminLogin(event)" class="p-6 space-y-4">
+                <div>
+                    <label for="admin-username" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Username Admin</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <input type="text" id="admin-username" required placeholder="Masukkan username admin"
+                            class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="admin-password" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Password</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-key"></i>
+                        </div>
+                        <input type="password" id="admin-password" required placeholder="Masukkan password"
+                            class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition">
+                    </div>
+                </div>
+
+                <div id="login-error-msg" class="hidden text-xs text-red-600 bg-red-50 p-3 rounded-xl border border-red-200 flex items-center space-x-2">
+                    <i class="fa-solid fa-circle-exclamation text-red-500 shrink-0"></i>
+                    <span>Username atau password tidak cocok!</span>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-right-to-bracket"></i>
+                        <span>Masuk Sebagai Admin</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DETAIL & ACTION TINDAK LANJUT -->
+    <div id="detail-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden transform transition-all border border-slate-100">
+            <!-- Modal Header -->
+            <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-file-lines text-emerald-400"></i>
+                    <h3 class="font-bold text-sm">Detail & Tindak Lanjut Request VervalPD</h3>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Modal Content -->
+            <div class="p-6 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar" id="modal-body">
+                <!-- Content dynamically populated -->
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="bg-slate-50 px-6 py-3.5 border-t border-slate-100 flex items-center justify-between flex-wrap gap-2">
+                <div class="flex items-center space-x-2">
+                    <button onclick="copyFormattedSlip()" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 shadow">
+                        <i class="fa-regular fa-copy"></i>
+                        <span>Salin Slip</span>
+                    </button>
+                    <button onclick="sendWhatsAppNotification(activeDetailId)" class="px-3.5 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 shadow">
+                        <i class="fa-brands fa-whatsapp text-sm"></i>
+                        <span>Kirim WA Tindak Lanjut</span>
+                    </button>
+                </div>
+                <button onclick="closeModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-semibold transition">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- LOCAL STORAGE KEYS ---
+        const STORAGE_KEY = 'vervalpd_requests_db';
+        const AUTH_KEY = 'vervalpd_admin_logged_in';
+
+        // Initial Admin Auth State
+        let isAdminLoggedIn = localStorage.getItem(AUTH_KEY) === 'true';
+
+        // Initial Demo Request Data
+        let requestDataList = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [
+            {
+                id: 'REQ-' + (Date.now() - 100000),
+                timestamp: new Date(Date.now() - 3600000 * 5).toISOString(),
+                namaMadrasah: 'MIS Nurul Huda Kebumen',
+                noWhatsapp: '081234567890',
+                nsm: '121233050001',
+                npsn: '20360001',
+                namaSiswa: 'Ahmad Fauzi',
+                nisn: '0123456789',
+                nik: '3305123456780001',
+                tempatLahir: 'Kebumen',
+                tanggalLahir: '2015-05-12',
+                jenisKelamin: 'Laki-laki',
+                namaIbuKandung: 'Siti Aminah',
+                tingkatPendidikan: 'MI - Kelas 3',
+                recordAktif: 'AKTIF DI EMIS',
+                kendala: 'Belum masuk vervalPD, aktif di EMIS',
+                status: 'Belum Ditindaklanjuti',
+                catatanAdmin: ''
+            },
+            {
+                id: 'REQ-' + (Date.now() - 500000),
+                timestamp: new Date(Date.now() - 3600000 * 24).toISOString(),
+                namaMadrasah: 'MTs Negeri 1 Kebumen',
+                noWhatsapp: '085712345678',
+                nsm: '121133050002',
+                npsn: '20360002',
+                namaSiswa: 'Siti Nurhaliza',
+                nisn: '0098765432',
+                nik: '3305987654320002',
+                tempatLahir: 'Kebumen',
+                tanggalLahir: '2011-08-20',
+                jenisKelamin: 'Perempuan',
+                namaIbuKandung: 'Dewi Lestari',
+                tingkatPendidikan: 'MTs - Kelas 7',
+                recordAktif: 'AKTIF DI EMIS',
+                kendala: 'Siswa pindahan, belum tersinkron di VervalPD',
+                status: 'Sedang Diproses',
+                catatanAdmin: 'Sedang diajukan tiket pengecekan ke PUSDATIN'
+            }
+        ];
+
+        let activeDetailId = null;
+
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(requestDataList));
+            updateBadgesAndNotifs();
+            if (isAdminLoggedIn) {
+                renderHistoryTable();
+            }
+        }
+
+        // UPDATE UI FOR LOGIN BADGE & NOTIF VISIBILITY
+        function updateAdminUI() {
+            const badgeContainer = document.getElementById('user-badge-container');
+            const notifWrapper = document.getElementById('notif-wrapper');
+
+            if (isAdminLoggedIn) {
+                // Show Admin Badge & Notif Bell
+                badgeContainer.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 rounded-full bg-amber-500 text-slate-900 flex items-center justify-center font-bold text-xs border border-amber-300 shadow">
+                            <i class="fa-solid fa-user-shield"></i>
+                        </div>
+                        <div class="hidden sm:block">
+                            <span class="text-xs text-white font-bold block leading-tight">ferichamanies</span>
+                            <span class="text-[10px] text-amber-300 font-medium">Admin Kabupaten</span>
+                        </div>
+                        <button onclick="handleAdminLogout()" title="Logout Admin" class="text-emerald-200 hover:text-red-300 transition p-1">
+                            <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                        </button>
+                    </div>
+                `;
+                notifWrapper.classList.remove('hidden');
+                document.getElementById('admin-lock-icon').classList.add('hidden');
+            } else {
+                // Show Guest / Public Button
+                badgeContainer.innerHTML = `
+                    <button onclick="openLoginModal()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold shadow transition flex items-center space-x-1.5 border border-emerald-400/30">
+                        <i class="fa-solid fa-lock text-amber-300"></i>
+                        <span>Login Admin</span>
+                    </button>
+                `;
+                notifWrapper.classList.add('hidden');
+                document.getElementById('admin-lock-icon').classList.remove('hidden');
+            }
+
+            updateBadgesAndNotifs();
+        }
+
+        // CHECK ADMIN AUTHENTICATION BEFORE NAVIGATING TO HISTORY
+        function checkAdminAuthAndNavigate() {
+            if (isAdminLoggedIn) {
+                switchTab('history');
+            } else {
+                openLoginModal();
+            }
+        }
+
+        // LOGIN MODAL CONTROLS
+        function openLoginModal() {
+            document.getElementById('login-modal').classList.remove('hidden');
+            document.getElementById('login-error-msg').classList.add('hidden');
+            document.getElementById('admin-username').focus();
+        }
+
+        function closeLoginModal() {
+            document.getElementById('login-modal').classList.add('hidden');
+        }
+
+        // HANDLE LOGIN SUBMIT
+        function handleAdminLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('admin-username').value.trim();
+            const pass = document.getElementById('admin-password').value.trim();
+
+            if (user === 'ferichamanies' && pass === '1234') {
+                isAdminLoggedIn = true;
+                localStorage.setItem(AUTH_KEY, 'true');
+                closeLoginModal();
+                updateAdminUI();
+                showToast('Login berhasil! Selamat datang Admin ferichamanies.', 'success');
+                switchTab('history');
+            } else {
+                document.getElementById('login-error-msg').classList.remove('hidden');
+            }
+        }
+
+        // HANDLE LOGOUT
+        function handleAdminLogout() {
+            isAdminLoggedIn = false;
+            localStorage.setItem(AUTH_KEY, 'false');
+            updateAdminUI();
+            switchTab('input');
+            showToast('Anda telah keluar dari akun Admin.', 'info');
+        }
+
+        // TAB SWITCHING FUNCTION
+        function switchTab(tabName) {
+            // Guard: If trying to access history without login, force login modal
+            if (tabName === 'history' && !isAdminLoggedIn) {
+                openLoginModal();
+                return;
+            }
+
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            
+            // Reset Tab Navigation Styling
+            document.getElementById('nav-btn-input').className = 'nav-tab px-4 py-2 rounded-xl text-xs font-semibold text-emerald-100 hover:bg-white/10 hover:text-white transition';
+            document.getElementById('nav-btn-history').className = 'nav-tab px-4 py-2 rounded-xl text-xs font-semibold text-emerald-100 hover:bg-white/10 hover:text-white transition';
+            document.getElementById('mobile-nav-input').className = 'px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-200';
+            document.getElementById('mobile-nav-history').className = 'px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-200';
+
+            if (tabName === 'input') {
+                document.getElementById('tab-input').classList.remove('hidden');
+                document.getElementById('nav-btn-input').className = 'nav-tab px-4 py-2 rounded-xl text-xs font-semibold bg-white/20 text-white shadow-inner';
+                document.getElementById('mobile-nav-input').className = 'px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-white/20';
+            } else if (tabName === 'history') {
+                document.getElementById('tab-history').classList.remove('hidden');
+                document.getElementById('nav-btn-history').className = 'nav-tab px-4 py-2 rounded-xl text-xs font-semibold bg-white/20 text-white shadow-inner';
+                document.getElementById('mobile-nav-history').className = 'px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-white/20';
+                renderHistoryTable();
+            }
+        }
+
+        // NOTIFICATION DROPDOWN TOGGLE
+        function toggleNotifDropdown() {
+            if (!isAdminLoggedIn) return;
+            const dropdown = document.getElementById('notif-dropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        // Close dropdown when clicking outside
+        window.addEventListener('click', function(e) {
+            const notifBtn = document.getElementById('notif-btn');
+            const dropdown = document.getElementById('notif-dropdown');
+            if (notifBtn && dropdown && !notifBtn.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        // FORM SUBMIT HANDLER (Publik)
+        function handleFormSubmit(e) {
+            e.preventDefault();
+
+            const newRequest = {
+                id: 'REQ-' + Date.now(),
+                timestamp: new Date().toISOString(),
+                namaMadrasah: document.getElementById('namaMadrasah').value.trim(),
+                noWhatsapp: document.getElementById('noWhatsapp').value.trim(),
+                nsm: document.getElementById('nsm').value.trim(),
+                npsn: document.getElementById('npsn').value.trim(),
+                namaSiswa: document.getElementById('namaSiswa').value.trim(),
+                nisn: document.getElementById('nisn').value.trim(),
+                nik: document.getElementById('nik').value.trim(),
+                tempatLahir: document.getElementById('tempatLahir').value.trim(),
+                tanggalLahir: document.getElementById('tanggalLahir').value,
+                jenisKelamin: document.getElementById('jenisKelamin').value,
+                namaIbuKandung: document.getElementById('namaIbuKandung').value.trim(),
+                tingkatPendidikan: document.getElementById('tingkatPendidikan').value,
+                recordAktif: document.getElementById('recordAktif').value,
+                kendala: document.getElementById('kendala').value.trim(),
+                status: 'Belum Ditindaklanjuti',
+                catatanAdmin: ''
+            };
+
+            requestDataList.unshift(newRequest);
+            saveData();
+            showToast('Permohonan berhasil dikirim ke Admin Kabupaten!', 'success');
+            
+            resetForm();
+        }
+
+        function resetForm() {
+            document.getElementById('verval-form').reset();
+            document.getElementById('recordAktif').value = 'AKTIF DI EMIS';
+            document.getElementById('kendala').value = 'Belum masuk vervalPD, aktif di EMIS';
+        }
+
+        // RENDER HISTORY TABLE (Admin Only)
+        function renderHistoryTable() {
+            if (!isAdminLoggedIn) return;
+
+            const tbody = document.getElementById('history-table-body');
+            const emptyState = document.getElementById('empty-state');
+            tbody.innerHTML = '';
+
+            const pendingItems = requestDataList.filter(item => item.status === 'Belum Ditindaklanjuti');
+            const processingItems = requestDataList.filter(item => item.status === 'Sedang Diproses');
+            const completedItems = requestDataList.filter(item => item.status === 'Selesai');
+
+            // Update Stats Cards
+            document.getElementById('stat-total').innerText = requestDataList.length;
+            document.getElementById('stat-pending').innerText = pendingItems.length;
+            document.getElementById('stat-processing').innerText = processingItems.length;
+            document.getElementById('stat-completed').innerText = completedItems.length;
+
+            if (requestDataList.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            requestDataList.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50/80 transition-colors border-b border-slate-100';
+
+                // Status Badge & Dropdown Selector
+                let statusClass = 'bg-amber-100 text-amber-800 border-amber-200';
+                if (item.status === 'Sedang Diproses') statusClass = 'bg-sky-100 text-sky-800 border-sky-200';
+                if (item.status === 'Selesai') statusClass = 'bg-emerald-100 text-emerald-800 border-emerald-200';
+                if (item.status === 'Ditolak') statusClass = 'bg-red-100 text-red-800 border-red-200';
+
+                const formattedDate = new Date(item.timestamp).toLocaleDateString('id-ID', {
+                    day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                });
+
+                tr.innerHTML = `
+                    <td class="p-3.5 text-center font-bold text-slate-400">${index + 1}</td>
+                    <td class="p-3.5 whitespace-nowrap text-slate-500 font-medium">${formattedDate}</td>
+                    <td class="p-3.5">
+                        <div class="font-bold text-slate-800">${escapeHtml(item.namaMadrasah)}</div>
+                        <div class="text-[11px] text-emerald-700 font-semibold"><i class="fa-brands fa-whatsapp"></i> ${escapeHtml(item.noWhatsapp || '-')}</div>
+                        <div class="text-[10px] text-slate-400">NSM: ${escapeHtml(item.nsm)} | NPSN: ${escapeHtml(item.npsn)}</div>
+                    </td>
+                    <td class="p-3.5">
+                        <div class="font-bold text-emerald-800">${escapeHtml(item.namaSiswa)}</div>
+                        <div class="text-[11px] text-slate-400">${escapeHtml(item.jenisKelamin)} • Ibu: ${escapeHtml(item.namaIbuKandung)}</div>
+                    </td>
+                    <td class="p-3.5 whitespace-nowrap">
+                        <div class="font-mono font-medium text-slate-700">NIK: ${escapeHtml(item.nik)}</div>
+                        <div class="font-mono text-slate-500 text-[11px]">NISN: ${escapeHtml(item.nisn)}</div>
+                    </td>
+                    <td class="p-3.5 whitespace-nowrap">
+                        <span class="bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg font-semibold text-[11px]">${escapeHtml(item.tingkatPendidikan)}</span>
+                    </td>
+                    <td class="p-3.5 text-center whitespace-nowrap">
+                        <select onchange="updateStatusQuick('${item.id}', this.value)" class="text-[11px] py-1.5 px-2.5 rounded-full font-bold border ${statusClass} focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer">
+                            <option value="Belum Ditindaklanjuti" ${item.status === 'Belum Ditindaklanjuti' ? 'selected' : ''}>⏳ Belum Ditindaklanjuti</option>
+                            <option value="Sedang Diproses" ${item.status === 'Sedang Diproses' ? 'selected' : ''}>🔄 Sedang Diproses</option>
+                            <option value="Selesai" ${item.status === 'Selesai' ? 'selected' : ''}>✅ Selesai / Sudah Sinkron</option>
+                            <option value="Ditolak" ${item.status === 'Ditolak' ? 'selected' : ''}>❌ Ditolak / Tidak Sesuai</option>
+                        </select>
+                    </td>
+                    <td class="p-3.5 text-center whitespace-nowrap">
+                        <div class="flex items-center justify-center space-x-1">
+                            <button onclick="sendWhatsAppNotification('${item.id}')" title="Kirim Pesan WhatsApp"
+                                class="p-2 text-white bg-green-600 hover:bg-green-700 rounded-xl transition shadow-sm">
+                                <i class="fa-brands fa-whatsapp text-sm"></i>
+                            </button>
+                            <button onclick="openDetailModal('${item.id}')" title="Detail & Catatan Admin"
+                                class="p-2 text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl transition">
+                                <i class="fa-solid fa-eye text-sm"></i>
+                            </button>
+                            <button onclick="deleteRequest('${item.id}')" title="Hapus Data"
+                                class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition">
+                                <i class="fa-solid fa-trash text-sm"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // QUICK STATUS CHANGE FROM TABLE SELECT
+        function updateStatusQuick(id, newStatus) {
+            const item = requestDataList.find(r => r.id === id);
+            if (item) {
+                item.status = newStatus;
+                saveData();
+                showToast(`Status permohonan ${item.namaSiswa} diubah menjadi "${newStatus}"`, 'info');
+            }
+        }
+
+        // FILTER TABLE
+        function filterHistoryTable() {
+            const searchValue = document.getElementById('search-input').value.toLowerCase();
+            const filterStatus = document.getElementById('filter-status').value;
+            const rows = document.querySelectorAll('#history-table-body tr');
+
+            rows.forEach((row, idx) => {
+                const item = requestDataList[idx];
+                if (!item) return;
+
+                const matchesSearch = item.namaSiswa.toLowerCase().includes(searchValue) ||
+                                      item.namaMadrasah.toLowerCase().includes(searchValue) ||
+                                      (item.noWhatsapp && item.noWhatsapp.includes(searchValue)) ||
+                                      item.nik.includes(searchValue) ||
+                                      item.nisn.includes(searchValue) ||
+                                      item.nsm.includes(searchValue);
+
+                const matchesStatus = (filterStatus === 'ALL') || (item.status === filterStatus);
+
+                if (matchesSearch && matchesStatus) {
+                    row.classList.remove('hidden');
+                } else {
+                    row.classList.add('hidden');
+                }
+            });
+        }
+
+        // UPDATE NOTIFICATIONS BADGE & SOCIAL NOTIFICATION DROPDOWN LIST
+        function updateBadgesAndNotifs() {
+            const pendingList = requestDataList.filter(item => item.status === 'Belum Ditindaklanjuti');
+            const count = pendingList.length;
+
+            const notifCountEl = document.getElementById('notif-count');
+            const historyBadgeEl = document.getElementById('history-badge');
+            const mobileBadgeEl = document.getElementById('mobile-history-badge');
+            const notifPanelBadge = document.getElementById('notif-panel-badge');
+
+            if (notifCountEl) {
+                notifCountEl.innerText = count;
+                notifCountEl.style.display = count > 0 ? 'inline-flex' : 'none';
+            }
+
+            if (historyBadgeEl) {
+                historyBadgeEl.innerText = count;
+                historyBadgeEl.style.display = count > 0 ? 'inline-block' : 'none';
+            }
+
+            if (mobileBadgeEl) {
+                mobileBadgeEl.innerText = count;
+                mobileBadgeEl.style.display = count > 0 ? 'inline-block' : 'none';
+            }
+
+            if (notifPanelBadge) {
+                notifPanelBadge.innerText = `${count} Permohonan`;
+            }
+
+            // Populate Dropdown
+            const notifListEl = document.getElementById('notif-list');
+            if (!notifListEl) return;
+            notifListEl.innerHTML = '';
+
+            if (count === 0) {
+                notifListEl.innerHTML = `
+                    <div class="p-6 text-center text-slate-400 text-xs">
+                        <i class="fa-solid fa-bell-slash text-2xl mb-2 text-slate-300"></i>
+                        <p>Semua pengajuan telah ditindaklanjuti!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            pendingList.forEach(item => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'p-3.5 hover:bg-slate-50 transition cursor-pointer flex items-start space-x-3';
+                itemEl.onclick = () => {
+                    toggleNotifDropdown();
+                    checkAdminAuthAndNavigate();
+                    openDetailModal(item.id);
+                };
+
+                const formattedTime = new Date(item.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+                itemEl.innerHTML = `
+                    <div class="w-9 h-9 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0 mt-0.5">
+                        <i class="fa-solid fa-clock-rotate-left text-sm"></i>
+                    </div>
+                    <div class="flex-grow min-w-0">
+                        <div class="flex items-center justify-between mb-0.5">
+                            <h5 class="text-xs font-bold text-slate-800 truncate">${escapeHtml(item.namaSiswa)}</h5>
+                            <span class="text-[10px] text-slate-400">${formattedTime}</span>
+                        </div>
+                        <p class="text-[11px] text-slate-600 truncate">${escapeHtml(item.namaMadrasah)}</p>
+                        <span class="inline-block mt-1 text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded border border-amber-200 font-semibold">
+                            ⚠️ Belum Ditindaklanjuti
+                        </span>
+                    </div>
+                `;
+                notifListEl.appendChild(itemEl);
+            });
+        }
+
+        // DETAIL & ACTION MODAL LOGIC
+        function openDetailModal(id) {
+            activeDetailId = id;
+            const item = requestDataList.find(r => r.id === id);
+            if (!item) return;
+
+            const modalBody = document.getElementById('modal-body');
+            const formattedDate = new Date(item.timestamp).toLocaleString('id-ID', {
+                dateStyle: 'full', timeStyle: 'short'
+            });
+
+            modalBody.innerHTML = `
+                <!-- Admin Status Update Control Bar -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                        <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                            <i class="fa-solid fa-sliders text-emerald-600 mr-1"></i> Penindaklanjutan Status Admin
+                        </span>
+                        <span class="text-xs text-slate-400">ID: ${item.id}</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Pilih Status Tindak Lanjut:</label>
+                            <select id="modal-status-select" onchange="updateStatusModal('${item.id}', this.value)" class="w-full text-xs py-2 px-3 bg-white border border-slate-300 rounded-xl font-bold focus:ring-2 focus:ring-emerald-500">
+                                <option value="Belum Ditindaklanjuti" ${item.status === 'Belum Ditindaklanjuti' ? 'selected' : ''}>⏳ Belum Ditindaklanjuti</option>
+                                <option value="Sedang Diproses" ${item.status === 'Sedang Diproses' ? 'selected' : ''}>🔄 Sedang Diproses / Cek PUSDATIN</option>
+                                <option value="Selesai" ${item.status === 'Selesai' ? 'selected' : ''}>✅ Selesai / Sudah Masuk VervalPD</option>
+                                <option value="Ditolak" ${item.status === 'Ditolak' ? 'selected' : ''}>❌ Ditolak / Data Tidak Sesuai</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Catatan Admin / Alasan Ditolak:</label>
+                            <input type="text" id="modal-admin-note" value="${escapeHtml(item.catatanAdmin || '')}" placeholder="Misal: Sudah disinkron / Data NIK tidak valid"
+                                onchange="saveAdminNote('${item.id}', this.value)"
+                                class="w-full text-xs py-2 px-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formatted WhatsApp Slip Text Box -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-2">Format Teks Pengajuan (Siap Copy)</label>
+                    <div class="bg-slate-900 text-slate-100 p-5 rounded-2xl font-mono text-xs relative group overflow-x-auto border border-slate-800">
+                        <button onclick="copyFormattedSlip()" class="absolute top-3 right-3 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[11px] font-sans font-bold transition flex items-center space-x-1 shadow">
+                            <i class="fa-regular fa-copy"></i>
+                            <span>Salin Slip</span>
+                        </button>
+                        <pre class="whitespace-pre-wrap leading-relaxed">
+REQUEST BELUM MASUK DI VERVALPD
+
+Nama Madrasah : ${escapeHtml(item.namaMadrasah)}
+No. WhatsApp : ${escapeHtml(item.noWhatsapp || '-')}
+NSM : ${escapeHtml(item.nsm)}
+NPSN : ${escapeHtml(item.npsn)}
+Nama Siswa : ${escapeHtml(item.namaSiswa)}
+NISN : ${escapeHtml(item.nisn)}
+NIK : ${escapeHtml(item.nik)}
+Tempat Lahir : ${escapeHtml(item.tempatLahir)}
+Tanggal Lahir : ${escapeHtml(item.tanggalLahir)}
+Jenis Kelamin : ${escapeHtml(item.jenisKelamin)}
+Nama Ibu Kandung : ${escapeHtml(item.namaIbuKandung)}
+Tingkat Pendidikan : ${escapeHtml(item.tingkatPendidikan)}
+Record Aktif : ${escapeHtml(item.recordAktif)}
+Kendala : ${escapeHtml(item.kendala)}</pre>
+                    </div>
+                </div>
+
+                <!-- Metadata Footer -->
+                <div class="text-[11px] text-slate-400 flex items-center justify-between border-t border-slate-100 pt-3">
+                    <span>Waktu Pengajuan: ${formattedDate}</span>
+                    <span>Admin Status: <strong class="text-slate-700">${item.status}</strong></span>
+                </div>
+            `;
+
+            document.getElementById('detail-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('detail-modal').classList.add('hidden');
+            activeDetailId = null;
+        }
+
+        // SEND WHATSAPP NOTIFICATION
+        function sendWhatsAppNotification(id) {
+            const item = requestDataList.find(r => r.id === id);
+            if (!item) return;
+
+            let rawPhone = item.noWhatsapp || '';
+            if (!rawPhone) {
+                showToast('Nomor WhatsApp pengaju tidak ditemukan!', 'warning');
+                return;
+            }
+
+            // Normalize Phone Number for WhatsApp URL (convert 08xx to 628xx)
+            rawPhone = rawPhone.replace(/[^0-9]/g, '');
+            if (rawPhone.startsWith('0')) {
+                rawPhone = '62' + rawPhone.slice(1);
+            }
+
+            // Generate Custom Message based on Status
+            let statusText = '';
+            let noteText = item.catatanAdmin ? `\n*Catatan Admin:* ${item.catatanAdmin}` : '';
+
+            if (item.status === 'Selesai') {
+                statusText = `✅ *STATUS: SELESAI / SUDAH SINKRON*\n\nPermohonan VervalPD untuk siswa berikut telah berhasil diproses dan disinkronkan ke sistem VervalPD oleh Admin Kabupaten Kebumen.`;
+            } else if (item.status === 'Ditolak') {
+                statusText = `❌ *STATUS: DITOLAK / TIDAK SESUAI*\n\nMohon maaf, permohonan VervalPD untuk siswa berikut tidak dapat diproses saat ini.`;
+            } else if (item.status === 'Sedang Diproses') {
+                statusText = `🔄 *STATUS: SEDANG DIPROSES*\n\nPermohonan VervalPD untuk siswa berikut sedang dalam proses pengecekan / verifikasi ke PUSDATIN oleh Admin Kabupaten Kebumen.`;
+            } else {
+                statusText = `⏳ *STATUS: DALAM ANTRIAN*\n\nPermohonan VervalPD Anda telah diterima dan masuk dalam antrian penanganan Admin Kabupaten Kebumen.`;
+            }
+
+            const message = `*LAYANAN VERVALPD KABUPATEN KEBUMEN*\n` +
+                `-----------------------------------------\n` +
+                `Halo Bpk/Ibu Operator *${item.namaMadrasah}*,\n\n` +
+                `${statusText}` +
+                `${noteText}\n\n` +
+                `*Rincian Data Siswa:*\n` +
+                `• Nama Siswa: ${item.namaSiswa}\n` +
+                `• NISN: ${item.nisn}\n` +
+                `• NIK: ${item.nik}\n` +
+                `• Tingkat: ${item.tingkatPendidikan}\n` +
+                `• Kendala: ${item.kendala}\n\n` +
+                `Terima kasih,\n` +
+                `*Admin VervalPD Kab. Kebumen*`;
+
+            const encodedMessage = encodeURIComponent(message);
+            const waUrl = `https://wa.me/${rawPhone}?text=${encodedMessage}`;
+            window.open(waUrl, '_blank');
+        }
+
+        // UPDATE STATUS FROM MODAL
+        function updateStatusModal(id, newStatus) {
+            const item = requestDataList.find(r => r.id === id);
+            if (item) {
+                item.status = newStatus;
+                saveData();
+                showToast(`Status ajuan berhasil diperbarui menjadi "${newStatus}"`, 'success');
+            }
+        }
+
+        // SAVE ADMIN NOTE
+        function saveAdminNote(id, note) {
+            const item = requestDataList.find(r => r.id === id);
+            if (item) {
+                item.catatanAdmin = note;
+                saveData();
+                showToast('Catatan Admin berhasil disimpan.', 'info');
+            }
+        }
+
+        // DELETE REQUEST HANDLER
+        function deleteRequest(id) {
+            if (!isAdminLoggedIn) return;
+            if (confirm('Apakah Anda yakin ingin menghapus data permohonan ini secara permanen?')) {
+                requestDataList = requestDataList.filter(r => r.id !== id);
+                saveData();
+                showToast('Data permohonan berhasil dihapus.', 'warning');
+            }
+        }
+
+        // COPY FORMATTED SLIP TO CLIPBOARD
+        function copyFormattedSlip() {
+            if (!activeDetailId) return;
+            const item = requestDataList.find(r => r.id === activeDetailId);
+            if (!item) return;
+
+            const textToCopy = `REQUEST BELUM MASUK DI VERVALPD\n\nNama Madrasah : ${item.namaMadrasah}\nNo. WhatsApp : ${item.noWhatsapp || '-'}\nNSM : ${item.nsm}\nNPSN : ${item.npsn}\nNama Siswa : ${item.namaSiswa}\nNISN : ${item.nisn}\nNIK : ${item.nik}\nTempat Lahir : ${item.tempatLahir}\nTanggal Lahir : ${item.tanggalLahir}\nJenis Kelamin : ${item.jenisKelamin}\nNama Ibu Kandung : ${item.namaIbuKandung}\nTingkat Pendidikan : ${item.tingkatPendidikan}\nRecord Aktif : ${item.recordAktif}\nKendala : ${item.kendala}`;
+
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = textToCopy;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            try {
+                document.execCommand('copy');
+                showToast('Format teks berhasil disalin ke clipboard!', 'success');
+            } catch (err) {
+                showToast('Gagal menyalin teks.', 'danger');
+            }
+            document.body.removeChild(tempTextArea);
+        }
+
+        // EXPORT TO CSV / EXCEL
+        function exportToCSV() {
+            if (!isAdminLoggedIn) return;
+            if (requestDataList.length === 0) {
+                showToast('Tidak ada data untuk diekspor!', 'warning');
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "ID,Tanggal Ajuan,Nama Madrasah,No WhatsApp,NSM,NPSN,Nama Siswa,NISN,NIK,Tempat Lahir,Tanggal Lahir,Jenis Kelamin,Nama Ibu Kandung,Tingkat Pendidikan,Record Aktif,Kendala,Status,Catatan Admin\n";
+
+            requestDataList.forEach(item => {
+                const row = [
+                    `"${item.id}"`,
+                    `"${item.timestamp}"`,
+                    `"${item.namaMadrasah}"`,
+                    `"${item.noWhatsapp || ''}"`,
+                    `"${item.nsm}"`,
+                    `"${item.npsn}"`,
+                    `"${item.namaSiswa}"`,
+                    `"${item.nisn}"`,
+                    `"${item.nik}"`,
+                    `"${item.tempatLahir}"`,
+                    `"${item.tanggalLahir}"`,
+                    `"${item.jenisKelamin}"`,
+                    `"${item.namaIbuKandung}"`,
+                    `"${item.tingkatPendidikan}"`,
+                    `"${item.recordAktif}"`,
+                    `"${item.kendala}"`,
+                    `"${item.status}"`,
+                    `"${item.catatanAdmin || ''}"`
+                ].join(",");
+                csvContent += row + "\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Rekap_Request_VervalPD_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('Data riwayat berhasil diekspor ke CSV/Excel!', 'success');
+        }
+
+        // TOAST NOTIFICATION SYSTEM
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+
+            let bgClass = 'bg-slate-800 text-white';
+            let iconClass = 'fa-solid fa-circle-info text-blue-400';
+
+            if (type === 'success') {
+                bgClass = 'bg-emerald-800 text-white';
+                iconClass = 'fa-solid fa-circle-check text-emerald-300';
+            } else if (type === 'warning') {
+                bgClass = 'bg-amber-800 text-white';
+                iconClass = 'fa-solid fa-triangle-exclamation text-amber-300';
+            } else if (type === 'danger') {
+                bgClass = 'bg-red-800 text-white';
+                iconClass = 'fa-solid fa-circle-xmark text-red-300';
+            }
+
+            toast.className = `${bgClass} pointer-events-auto px-4 py-3 rounded-2xl shadow-2xl flex items-center space-x-3 text-xs font-semibold transform transition-all duration-300 translate-y-2 opacity-0 max-w-sm border border-white/10`;
+            toast.innerHTML = `
+                <i class="${iconClass} text-lg shrink-0"></i>
+                <span class="flex-grow">${message}</span>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // ESCAPE HTML UTILITY
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;")
+                      .replace(/</g, "&lt;")
+                      .replace(/>/g, "&gt;")
+                      .replace(/"/g, "&quot;")
+                      .replace(/'/g, "&#039;");
+        }
+
+        // INITIALIZATION ON PAGE LOAD
+        window.onload = function() {
+            updateAdminUI();
+        };
+    </script>
+</body>
+</html>
